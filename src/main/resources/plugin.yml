@@ -1,0 +1,6 @@
+name: LogManager
+version: $version
+author: shirokuro
+description: Log manager
+main: com.github.kuro46.logmanager.LogManagerPlugin
+load: STARTUP
