@@ -29,14 +29,24 @@ object LogUtils {
     fun getLogDate(fileName: String): LogDate {
         val buffer = StringBuilder()
         val dataList = ArrayList<String>()
-        for (char in fileName.toCharArray()) {
-            if (char == '-' && buffer.isNotEmpty()) {
+
+        fun flushBufIfNeeded() {
+            if (buffer.isNotEmpty()) {
                 dataList.add(buffer.toString())
                 buffer.clear()
+            }
+        }
+
+        for (char in fileName.toCharArray()) {
+            if (char == '-') {
+                flushBufIfNeeded()
+                continue
             }
 
             buffer.append(char)
         }
+
+        flushBufIfNeeded()
 
         return LogDate(
             year = dataList[0].toInt(),
@@ -55,7 +65,11 @@ object LogUtils {
     }
 
     fun isLogFile(fileName: String, includeLatest: Boolean): Boolean {
-        return (includeLatest && isLatestLog(fileName)) || isLogExtension(fileName)
+        return if (isLatestLog(fileName)) {
+            includeLatest
+        } else {
+            isLogExtension(fileName)
+        }
     }
 
     private fun isLatestLog(fileName: String): Boolean {
