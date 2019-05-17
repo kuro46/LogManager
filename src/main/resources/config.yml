@@ -7,4 +7,4 @@ log-processing:
     compress:
       file-path: ./logs/logs.zip
     move:
-      directory: "./logs/:year/:month/"
+      directory: "./logs/:year-:month/"
