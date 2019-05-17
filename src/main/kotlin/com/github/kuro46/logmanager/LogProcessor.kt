@@ -30,6 +30,7 @@ class LogProcessor(
         when (logProcessing.processType) {
             ProcessType.COMPRESS -> compress(filesToProcess)
             ProcessType.DELETE -> delete(filesToProcess)
+            ProcessType.MOVE -> move(filesToProcess)
         }
     }
 
@@ -63,6 +64,32 @@ class LogProcessor(
         }
     }
 
+    private fun move(files: List<Path>) {
+        val directoryString = (logProcessing.optionOfType as ProcessingOption.Move).directory
+
+        fun buildDirectoryPath(logDate: LogDate): Path {
+            val modifiedDirectory = directoryString
+                .replace(":year", logDate.year.toString())
+                .replace(":month", logDate.month.toString())
+                .replace(":day", logDate.day.toString())
+
+            return Paths.get(modifiedDirectory)
+        }
+
+        for (file in files) {
+            val directory = buildDirectoryPath(
+                LogUtils.getLogDate(
+                    LogUtils.trimExtensionStr(
+                        file.fileName.toString()
+                    )
+                )
+            )
+
+            Files.createDirectories(directory)
+            Files.move(file, directory.resolve(file.fileName))
+        }
+    }
+
     private fun delete(files: List<Path>) {
         files.forEach { Files.delete(it) }
     }
@@ -87,5 +114,6 @@ class LogProcessor(
 
 enum class ProcessType {
     COMPRESS,
-    DELETE
+    DELETE,
+    MOVE
 }

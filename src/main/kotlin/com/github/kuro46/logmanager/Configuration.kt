@@ -43,10 +43,10 @@ class Configuration(
             val optionSection =
                 configuration.getConfigurationSection("options.${processType.name.toLowerCase()}")
 
-            return if (processType == ProcessType.COMPRESS) {
-                ProcessingOption.Compress(optionSection.getString("fileName"))
-            } else {
-                ProcessingOption.None
+            return when (processType) {
+                ProcessType.COMPRESS -> ProcessingOption.Compress(optionSection.getString("fileName"))
+                ProcessType.MOVE -> ProcessingOption.Move(optionSection.getString("directory"))
+                else -> ProcessingOption.None
             }
         }
     }
@@ -62,4 +62,5 @@ data class LogProcessing(
 sealed class ProcessingOption {
     object None : ProcessingOption()
     data class Compress(val fileName: String) : ProcessingOption()
+    data class Move(val directory: String) : ProcessingOption()
 }

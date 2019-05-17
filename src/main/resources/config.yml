@@ -2,7 +2,9 @@ decompress-all-logs: false
 log-processing:
   enabled: true
   process-days-before: 2
-  process-type: COMPRESS
+  process-type: MOVE
   options:
     compress:
       file-path: ./logs/logs.zip
+    move:
+      directory: "./logs/:year/:month/"
