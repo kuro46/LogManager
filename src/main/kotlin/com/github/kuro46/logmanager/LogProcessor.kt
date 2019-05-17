@@ -2,6 +2,7 @@ package com.github.kuro46.logmanager
 
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.time.LocalDate
 import java.util.function.BiPredicate
 import java.util.zip.GZIPInputStream
@@ -11,9 +12,10 @@ import kotlin.streams.toList
  * @author shirokuro
  */
 class LogProcessor(
-    private val processType: ProcessType,
-    private val processNDaysAgo: Int = 2
+    configuration: Configuration
 ) {
+    private val logProcessing = configuration.logProcessing
+
     init {
         execute()
     }
@@ -25,14 +27,15 @@ class LogProcessor(
             return
         }
 
-        when (processType) {
+        when (logProcessing.processType) {
             ProcessType.COMPRESS -> compress(filesToProcess)
             ProcessType.DELETE -> delete(filesToProcess)
         }
     }
 
     private fun compress(files: List<Path>) {
-        val archiveFile = LogUtils.LOG_DIRECTORY.resolve("logs.zip")
+        val archiveFile =
+            Paths.get((logProcessing.optionOfType as ProcessingOption.Compress).fileName)
         if (Files.notExists(archiveFile)) {
             Files.createFile(archiveFile)
         }
@@ -74,7 +77,8 @@ class LogProcessor(
 
             val logDate = LogUtils.getLogDate(LogUtils.trimExtensionStr(fileName))
             val fileLocalDate = LocalDate.of(logDate.year, logDate.month, logDate.day)
-            val twoDaysAgo = LocalDate.now().minusDays(processNDaysAgo.toLong())
+            val twoDaysAgo = LocalDate.now()
+                .minusDays(logProcessing.processDaysBefore.toLong())
 
             return@BiPredicate fileLocalDate.toEpochDay() <= twoDaysAgo.toEpochDay()
         }).toList()

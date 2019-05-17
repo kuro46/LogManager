@@ -3,22 +3,31 @@ package com.github.kuro46.logmanager
 /**
  * @author shirokuro
  */
-class LogManager {
+class LogManager(plugin: LogManagerPlugin) {
 
     init {
-        LogProcessor(ProcessType.COMPRESS)
-        Decompressor.decompressAllLogs()
+        plugin.saveDefaultConfig()
+
+        val configuration =
+            Configuration.load(plugin.dataFolder.resolve("config.yml").toPath())
+
+        if (configuration.logProcessing.enabled) {
+            LogProcessor(configuration)
+        }
+        if (configuration.decompressAllLogs) {
+            Decompressor.decompressAllLogs()
+        }
     }
 
     companion object {
         private var instance: LogManager? = null
 
-        fun init() {
+        fun init(plugin: LogManagerPlugin) {
             if (instance != null) {
                 throw IllegalStateException("Already initialized")
             }
 
-            instance = LogManager()
+            instance = LogManager(plugin)
         }
 
         fun reset() {
