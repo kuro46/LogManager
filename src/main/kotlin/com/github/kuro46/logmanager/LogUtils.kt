@@ -1,6 +1,10 @@
 package com.github.kuro46.logmanager
 
+import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.function.BiPredicate
+import kotlin.streams.toList
 
 object LogUtils {
     val LOG_DIRECTORY = Paths.get("./logs/")!!
@@ -40,6 +44,14 @@ object LogUtils {
             day = dataList[2].toInt(),
             number = dataList[3].toInt()
         )
+    }
+
+    fun getLogFiles(includeLatest: Boolean): List<Path> {
+        return Files.find(LOG_DIRECTORY, 1, BiPredicate { path, _ ->
+            val fileName = path.fileName.toString()
+
+            return@BiPredicate isLogFile(fileName, includeLatest)
+        }).toList()
     }
 
     fun isLogFile(fileName: String, includeLatest: Boolean): Boolean {

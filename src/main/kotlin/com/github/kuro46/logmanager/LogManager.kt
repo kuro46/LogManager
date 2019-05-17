@@ -7,6 +7,7 @@ class LogManager {
 
     init {
         Compressor()
+        Decompressor.decompressAllLogs()
     }
 
     companion object {
