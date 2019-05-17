@@ -6,7 +6,7 @@ package com.github.kuro46.logmanager
 class LogManager {
 
     init {
-        Compressor()
+        LogProcessor(ProcessType.COMPRESS)
         Decompressor.decompressAllLogs()
     }
 

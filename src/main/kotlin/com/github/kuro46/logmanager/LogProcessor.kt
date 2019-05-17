@@ -10,28 +10,38 @@ import kotlin.streams.toList
 /**
  * @author shirokuro
  */
-class Compressor(private val compressNDaysAgo: Int = 2) {
+class LogProcessor(
+    private val processType: ProcessType,
+    private val processNDaysAgo: Int = 2
+) {
     init {
         execute()
     }
 
     private fun execute() {
-        val compressableFiles = getCompressableFiles()
+        val filesToProcess = getFilesToProcess()
 
-        if (compressableFiles.isEmpty()) {
+        if (filesToProcess.isEmpty()) {
             return
         }
 
+        when (processType) {
+            ProcessType.COMPRESS -> compress(filesToProcess)
+            ProcessType.DELETE -> delete(filesToProcess)
+        }
+    }
+
+    private fun compress(files: List<Path>) {
         val archiveFile = LogUtils.LOG_DIRECTORY.resolve("logs.zip")
         if (Files.notExists(archiveFile)) {
             Files.createFile(archiveFile)
         }
 
         ZipEntryWriter(archiveFile).use { zipOutput ->
-            for (compressableFile in compressableFiles) {
-                val fileName = compressableFile.fileName.toString()
+            for (filePath in files) {
+                val fileName = filePath.fileName.toString()
 
-                val sourceStream = Files.newInputStream(compressableFile).buffered()
+                val sourceStream = Files.newInputStream(filePath).buffered()
                 val stream = if (!fileName.endsWith(".log.gz")) {
                     sourceStream
                 } else {
@@ -45,12 +55,16 @@ class Compressor(private val compressNDaysAgo: Int = 2) {
                     zipOutput.writeEntry(data)
                 }
 
-                Files.delete(compressableFile)
+                Files.delete(filePath)
             }
         }
     }
 
-    private fun getCompressableFiles(): List<Path> {
+    private fun delete(files: List<Path>) {
+        files.forEach { Files.delete(it) }
+    }
+
+    private fun getFilesToProcess(): List<Path> {
         return Files.find(LogUtils.LOG_DIRECTORY, 1, BiPredicate { path, _ ->
             val fileName = path.fileName.toString()
 
@@ -60,9 +74,14 @@ class Compressor(private val compressNDaysAgo: Int = 2) {
 
             val logDate = LogUtils.getLogDate(LogUtils.trimExtensionStr(fileName))
             val fileLocalDate = LocalDate.of(logDate.year, logDate.month, logDate.day)
-            val twoDaysAgo = LocalDate.now().minusDays(compressNDaysAgo.toLong())
+            val twoDaysAgo = LocalDate.now().minusDays(processNDaysAgo.toLong())
 
             return@BiPredicate fileLocalDate.toEpochDay() <= twoDaysAgo.toEpochDay()
         }).toList()
     }
+}
+
+enum class ProcessType {
+    COMPRESS,
+    DELETE
 }
