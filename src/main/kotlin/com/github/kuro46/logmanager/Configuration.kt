@@ -44,7 +44,7 @@ class Configuration(
                 configuration.getConfigurationSection("options.${processType.name.toLowerCase()}")
 
             return when (processType) {
-                ProcessType.COMPRESS -> ProcessingOption.Compress(optionSection.getString("fileName"))
+                ProcessType.COMPRESS -> ProcessingOption.Compress(optionSection.getString("file-name"))
                 ProcessType.MOVE -> ProcessingOption.Move(optionSection.getString("directory"))
                 else -> ProcessingOption.None
             }
