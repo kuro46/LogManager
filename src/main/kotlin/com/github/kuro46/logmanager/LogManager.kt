@@ -6,10 +6,7 @@ package com.github.kuro46.logmanager
 class LogManager {
 
     init {
-        LogCompressor()
-    }
-
-    fun onReset() {
+        Compressor()
     }
 
     companion object {
@@ -28,7 +25,6 @@ class LogManager {
                 throw IllegalStateException("Not initialized yet")
             }
 
-            instance!!.onReset()
             instance = null
         }
     }
