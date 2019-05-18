@@ -29,7 +29,6 @@ class LogProcessor(
 
         when (logProcessing.processType) {
             ProcessType.COMPRESS -> compress(filesToProcess)
-            ProcessType.DELETE -> delete(filesToProcess)
             ProcessType.MOVE -> move(filesToProcess)
         }
     }
@@ -88,10 +87,6 @@ class LogProcessor(
         }
     }
 
-    private fun delete(files: List<Path>) {
-        files.forEach { Files.delete(it) }
-    }
-
     private fun getFilesToProcess(): List<Path> {
         return Files.find(LogUtils.LOG_DIRECTORY, 1, BiPredicate { path, _ ->
             val fileName = path.fileName
@@ -112,6 +107,5 @@ class LogProcessor(
 
 enum class ProcessType {
     COMPRESS,
-    DELETE,
     MOVE
 }
