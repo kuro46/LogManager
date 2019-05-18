@@ -4,80 +4,57 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.function.BiPredicate
+import java.util.regex.Pattern
 import kotlin.streams.toList
 
 object LogUtils {
+    /**
+     * group1: file name(without extension)
+     * group2: year
+     * group3: month
+     * group4: day
+     * group5: number
+     * group6: extension
+     */
+    private val LOG_PATTERN = Pattern.compile("((\\d+)-(\\d+)-(\\d+)-(\\d+))(\\.log(?:\\.gz)?)")
+
     val LOG_DIRECTORY = Paths.get("./logs/")!!
 
-    fun trimExtensionStr(fileName: String): String {
-        fun trimExtension(extension: String): String {
-            val lastIndex = fileName.lastIndex
-            val lastIncludeIndex = lastIndex - extension.length
-
-            return fileName.substring(0, lastIncludeIndex + 1)
+    fun trimExtensionStr(filePath: Path): String {
+        val matcher = LOG_PATTERN.matcher(filePath.fileName.toString())
+        if (!matcher.find()) {
+            throw IllegalArgumentException("'$filePath' isn't log file")
         }
-
-        if (fileName.endsWith(".log.gz")) {
-            return trimExtension(".log.gz")
-        } else if (fileName.endsWith(".log")) {
-            return trimExtension(".log")
-        }
-
-        throw IllegalArgumentException("'$fileName' isn't log file")
+        return matcher.group(1)
     }
 
-    fun getLogDate(fileName: String): LogDate {
-        val buffer = StringBuilder()
-        val dataList = ArrayList<String>()
-
-        fun flushBufIfNeeded() {
-            if (buffer.isNotEmpty()) {
-                dataList.add(buffer.toString())
-                buffer.clear()
-            }
+    fun getLogDate(filePath: Path): LogDate {
+        val matcher = LOG_PATTERN.matcher(filePath.fileName.toString())
+        if (!matcher.find()) {
+            throw IllegalArgumentException("'$filePath' isn't log file")
         }
-
-        for (char in fileName.toCharArray()) {
-            if (char == '-') {
-                flushBufIfNeeded()
-                continue
-            }
-
-            buffer.append(char)
-        }
-
-        flushBufIfNeeded()
 
         return LogDate(
-            year = dataList[0].toInt(),
-            month = dataList[1].toInt(),
-            day = dataList[2].toInt(),
-            number = dataList[3].toInt()
+            year = matcher.group(2).toInt(),
+            month = matcher.group(3).toInt(),
+            day = matcher.group(4).toInt(),
+            number = matcher.group(5).toInt()
         )
     }
 
     fun getLogFiles(includeLatest: Boolean): List<Path> {
         return Files.find(LOG_DIRECTORY, 1, BiPredicate { path, _ ->
-            val fileName = path.fileName.toString()
-
-            return@BiPredicate isLogFile(fileName, includeLatest)
+            return@BiPredicate isLogFile(path, includeLatest)
         }).toList()
     }
 
-    fun isLogFile(fileName: String, includeLatest: Boolean): Boolean {
-        return if (isLatestLog(fileName)) {
+    fun isLogFile(filePath: Path, includeLatest: Boolean): Boolean {
+        val fileName = filePath.fileName.toString()
+        return if (fileName == "latest.log") {
             includeLatest
         } else {
-            isLogExtension(fileName)
+            LOG_PATTERN.matcher(fileName).find()
         }
-    }
-
-    private fun isLatestLog(fileName: String): Boolean {
-        return fileName == "latest.log"
-    }
-
-    private fun isLogExtension(fileName: String): Boolean {
-        return fileName.endsWith(".log") || fileName.endsWith(".log.gz")
     }
 }
 

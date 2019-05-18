@@ -11,7 +11,7 @@ object Decompressor {
         LogUtils.getLogFiles(false)
             .filter { it.toString().endsWith(".log.gz") }
             .forEach {
-                val withoutExtension = LogUtils.trimExtensionStr(it.fileName.toString()) + ".log"
+                val withoutExtension = LogUtils.trimExtensionStr(it) + ".log"
                 decompress(
                     it,
                     withoutExtension

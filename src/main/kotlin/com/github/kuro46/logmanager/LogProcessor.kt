@@ -53,7 +53,7 @@ class LogProcessor(
                 }
 
                 stream.use {
-                    val withoutExtension = LogUtils.trimExtensionStr(fileName)
+                    val withoutExtension = LogUtils.trimExtensionStr(filePath)
 
                     val data = ZipEntryData("$withoutExtension.log", stream)
                     zipOutput.writeEntry(data)
@@ -78,14 +78,12 @@ class LogProcessor(
 
         for (file in files) {
             val directory = buildDirectoryPath(
-                LogUtils.getLogDate(
-                    LogUtils.trimExtensionStr(
-                        file.fileName.toString()
-                    )
-                )
+                LogUtils.getLogDate(file.fileName)
             )
 
-            Files.createDirectories(directory)
+            if (Files.notExists(directory)) {
+                Files.createDirectories(directory)
+            }
             Files.move(file, directory.resolve(file.fileName))
         }
     }
@@ -96,13 +94,13 @@ class LogProcessor(
 
     private fun getFilesToProcess(): List<Path> {
         return Files.find(LogUtils.LOG_DIRECTORY, 1, BiPredicate { path, _ ->
-            val fileName = path.fileName.toString()
+            val fileName = path.fileName
 
             if (!LogUtils.isLogFile(fileName, false)) {
                 return@BiPredicate false
             }
 
-            val logDate = LogUtils.getLogDate(LogUtils.trimExtensionStr(fileName))
+            val logDate = LogUtils.getLogDate(fileName)
             val fileLocalDate = LocalDate.of(logDate.year, logDate.month, logDate.day)
             val twoDaysAgo = LocalDate.now()
                 .minusDays(logProcessing.processDaysBefore.toLong())
