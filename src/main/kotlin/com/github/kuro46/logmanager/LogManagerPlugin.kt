@@ -7,7 +7,7 @@ import org.bukkit.plugin.java.JavaPlugin
  */
 class LogManagerPlugin : JavaPlugin() {
     override fun onEnable() {
-        LogManager.init()
+        LogManager.init(this)
     }
 
     override fun onDisable() {
